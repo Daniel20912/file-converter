@@ -9,20 +9,28 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 @Service
 public class ImageConverterService {
 
-    public byte[] imageConverter(MultipartFile originalFile, ImageFormat imageFormat) throws IOException {
+    public byte[] imageConverter(MultipartFile originalFile, ImageFormat targetFormat) throws IOException {
+
+        String incomingMimetype = originalFile.getContentType();
+
+        boolean isSupported = Arrays.stream(ImageFormat.values())
+                .anyMatch(imageFormat -> imageFormat.getMimeType().equals(incomingMimetype));
+
+        if (!isSupported) {
+            throw new IllegalArgumentException("Invalid image format");
+        }
 
         try (InputStream inputStream = originalFile.getInputStream()) {
             BufferedImage image = ImageIO.read(inputStream);
 
-            if (imageFormat == null) throw new IOException("Invalid image format");
-
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-            ImageIO.write(image, String.valueOf(imageFormat), baos);
+            ImageIO.write(image, targetFormat.name().toLowerCase(), baos);
 
             return baos.toByteArray();
         }

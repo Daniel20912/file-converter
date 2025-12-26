@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -28,11 +29,42 @@ public class ImageConverterService {
         try (InputStream inputStream = originalFile.getInputStream()) {
             BufferedImage image = ImageIO.read(inputStream);
 
+            if (!targetFormat.isSupportsTransparency()) {
+                image = handleTransparency(image);
+            }
+
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             ImageIO.write(image, targetFormat.name().toLowerCase(), baos);
 
             return baos.toByteArray();
         }
+    }
+
+    private BufferedImage handleTransparency(BufferedImage originalImage) {
+        if (!originalImage.getColorModel().hasAlpha()) {
+            return originalImage;
+        }
+
+        BufferedImage newImage = new BufferedImage(
+                originalImage.getWidth(),
+                originalImage.getHeight(),
+                BufferedImage.TYPE_INT_RGB
+        );
+
+        Graphics2D g = newImage.createGraphics();
+
+        try {
+            g.setColor(Color.WHITE);
+            g.fillRect(0, 0, originalImage.getWidth(), originalImage.getHeight());
+
+            g.drawImage(originalImage, 0, 0, null);
+        } finally {
+            g.dispose();
+        }
+
+        originalImage.flush();
+
+        return newImage;
     }
 }

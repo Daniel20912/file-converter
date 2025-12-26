@@ -4,14 +4,16 @@ import lombok.Getter;
 
 @Getter
 public enum ImageFormat {
-    PNG("image/png"),
-    JPEG("image/jpeg"),
-    WEBP("image/webp");
+    PNG("image/png", true),
+    JPEG("image/jpeg", false),
+    WEBP("image/webp", true);
 
     private final String mimeType;
+    private final boolean supportsTransparency;
 
-    ImageFormat(String mimeType) {
+    ImageFormat(String mimeType, boolean supportsTransparency) {
         this.mimeType = mimeType;
+        this.supportsTransparency = supportsTransparency;
     }
 
 }

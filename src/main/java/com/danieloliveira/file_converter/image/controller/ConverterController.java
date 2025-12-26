@@ -49,4 +49,18 @@ public class ConverterController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"image_converted.jpeg\"")
                 .body(convertedImage);
     }
+
+    @PostMapping("/to-webp")
+    public ResponseEntity<byte[]> toWEBP(@RequestParam("file") MultipartFile image) throws IOException {
+        if (image.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        byte[] convertedImage = service.imageConverter(image, ImageFormat.WEBP);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(ImageFormat.WEBP.getMimeType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"image_converted.webp\"")
+                .body(convertedImage);
+    }
 }

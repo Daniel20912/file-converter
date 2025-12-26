@@ -1,5 +1,6 @@
 package com.danieloliveira.file_converter.image.service;
 
+import com.danieloliveira.file_converter.image.exceptions.InvalidImageFormatException;
 import com.danieloliveira.file_converter.image.model.ImageFormat;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,7 +24,7 @@ public class ImageConverterService {
                 .anyMatch(imageFormat -> imageFormat.getMimeType().equals(incomingMimetype));
 
         if (!isSupported) {
-            throw new IllegalArgumentException("Invalid image format");
+            throw new InvalidImageFormatException("Invalid image format");
         }
 
         try (InputStream inputStream = originalFile.getInputStream()) {

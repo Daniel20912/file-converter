@@ -1,10 +1,10 @@
 package com.danieloliveira.file_converter.image.controller;
 
+import com.danieloliveira.file_converter.image.exceptions.ImageCorruptedOrEmptyException;
 import com.danieloliveira.file_converter.image.model.ImageFormat;
 import com.danieloliveira.file_converter.image.service.ImageConverterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,7 +25,7 @@ public class ConverterController {
     @PostMapping("/to-png")
     public ResponseEntity<byte[]> toPNG(@RequestParam("file") MultipartFile image) throws IOException {
         if (image.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            throw new ImageCorruptedOrEmptyException("Image file is empty or corrupted");
         }
 
         byte[] convertedImage = service.imageConverter(image, ImageFormat.PNG);
@@ -39,7 +39,7 @@ public class ConverterController {
     @PostMapping("/to-jpeg")
     public ResponseEntity<byte[]> toJPG(@RequestParam("file") MultipartFile image) throws IOException {
         if (image.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            throw new ImageCorruptedOrEmptyException("Image file is empty or corrupted");
         }
 
         byte[] convertedImage = service.imageConverter(image, ImageFormat.JPEG);
@@ -53,7 +53,7 @@ public class ConverterController {
     @PostMapping("/to-webp")
     public ResponseEntity<byte[]> toWEBP(@RequestParam("file") MultipartFile image) throws IOException {
         if (image.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            throw new ImageCorruptedOrEmptyException("Image file is empty or corrupted");
         }
 
         byte[] convertedImage = service.imageConverter(image, ImageFormat.WEBP);

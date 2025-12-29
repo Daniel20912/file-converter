@@ -18,7 +18,7 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/api/v1/conversions/images")
 @RequiredArgsConstructor
-public class ConverterController {
+public class ImageConverterController {
 
     private final ImageConverterService service;
 

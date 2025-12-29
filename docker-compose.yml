@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+
+    container_name: file-converter-dev
+
+    working_dir: /app
+    command: mvn spring-boot:run
+
+    volumes:
+      - .:/app
+      - ~/.m2:/root/.m2
+
+    environment:
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      JODCONVERTER_LOCAL_OFFICE_HOME: /usr/lib/libreoffice
+
+    ports:
+      - "8080:8080"

@@ -35,4 +35,19 @@ public class DocumentConverterController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"document_converted.pdf\"")
                 .body(convertedDocument);
     }
+
+    @PostMapping("/to-docx")
+    public ResponseEntity<byte[]> toDOCX(@RequestParam("file") MultipartFile document) throws IOException {
+
+        if (document.isEmpty()) {
+            throw new IllegalArgumentException("Document file is empty or corrupted");
+        }
+
+        byte[] convertedDocument = service.documentConverter(document, DocumentFormat.DOCX);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.valueOf("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"document_converted.docx\"")
+                .body(convertedDocument);
+    }
 }

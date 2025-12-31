@@ -5,6 +5,7 @@ import lombok.Getter;
 @Getter
 public enum DocumentFormat {
     DOCX("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx"),
+    DOC("application/msword", "doc"),
     PDF("application/pdf", "pdf"),
     TXT("text/plain", "txt");
 

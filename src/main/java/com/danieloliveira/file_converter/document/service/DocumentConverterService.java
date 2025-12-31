@@ -4,6 +4,7 @@ import com.danieloliveira.file_converter.document.model.DocumentFormat;
 import lombok.RequiredArgsConstructor;
 import org.jodconverter.core.DocumentConverter;
 import org.jodconverter.core.document.DefaultDocumentFormatRegistry;
+import org.jodconverter.core.document.DocumentFamily;
 import org.jodconverter.core.office.OfficeException;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -35,14 +38,20 @@ public class DocumentConverterService {
             throw new IllegalArgumentException("Document format not supported: " + incomingMimeType);
         }
 
-        var jodFormat = DefaultDocumentFormatRegistry.getFormatByExtension(targetFormat.getExtension());
+        org.jodconverter.core.document.DocumentFormat jodTargetFormat;
+
+        if (targetFormat == DocumentFormat.PDF) {
+            jodTargetFormat = createPDF_A1b();
+        } else {
+            jodTargetFormat = DefaultDocumentFormatRegistry.getFormatByExtension(targetFormat.getExtension());
+        }
 
         try (InputStream inputStream = originalFile.getInputStream(); ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 
-            assert jodFormat != null;
+            assert jodTargetFormat != null;
             converter.convert(inputStream)
                     .to(baos)
-                    .as(jodFormat)
+                    .as(jodTargetFormat)
                     .execute();
 
             return baos.toByteArray();
@@ -50,5 +59,19 @@ public class DocumentConverterService {
         } catch (OfficeException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
+
+    private org.jodconverter.core.document.DocumentFormat createPDF_A1b() {
+        Map<String, Object> filterData = new HashMap<>();
+
+        filterData.put("SelectPdfVersion", 2);
+        filterData.put("Quality", 90);
+        filterData.put("ExportBookmarks", true);
+        filterData.put("ExportNotes", false);
+
+        return org.jodconverter.core.document.DocumentFormat.builder()
+                .from(DefaultDocumentFormatRegistry.PDF)
+                .storeProperty(DocumentFamily.TEXT, "FilterData", filterData)
+                .build();
     }
 }

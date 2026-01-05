@@ -1,10 +1,11 @@
 package com.danieloliveira.file_converter.document.service;
 
-import com.danieloliveira.file_converter.document.model.DocumentFormat;
+import com.danieloliveira.file_converter.document.model.DocFormat;
 import lombok.RequiredArgsConstructor;
 import org.jodconverter.core.DocumentConverter;
 import org.jodconverter.core.document.DefaultDocumentFormatRegistry;
 import org.jodconverter.core.document.DocumentFamily;
+import org.jodconverter.core.document.DocumentFormat;
 import org.jodconverter.core.office.OfficeException;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -23,14 +24,14 @@ public class DocumentConverterService {
 
     private final DocumentConverter converter;
 
-    public byte[] documentConverter(MultipartFile originalFile, DocumentFormat targetFormat) throws IOException {
+    public byte[] documentConverter(MultipartFile originalFile, DocFormat targetFormat) throws IOException {
 
         String incomingMimeType = originalFile.getContentType();
 
         assert incomingMimeType != null;
         MediaType incomingMediaType = MediaType.parseMediaType(incomingMimeType);
 
-        boolean isSupported = Arrays.stream(DocumentFormat.values())
+        boolean isSupported = Arrays.stream(DocFormat.values())
                 .map(fmt -> MediaType.parseMediaType(fmt.getMimeType()))
                 .anyMatch(supportedMediaType -> supportedMediaType.includes(incomingMediaType));
 
@@ -38,10 +39,12 @@ public class DocumentConverterService {
             throw new IllegalArgumentException("Document format not supported: " + incomingMimeType);
         }
 
-        org.jodconverter.core.document.DocumentFormat jodTargetFormat;
+        DocumentFormat jodTargetFormat;
 
-        if (targetFormat == DocumentFormat.PDF) {
-            jodTargetFormat = createPDF_A1b();
+        if (targetFormat == DocFormat.PDF) {
+            jodTargetFormat = createPDF(false);
+        } else if (targetFormat == DocFormat.PDFA) {
+            jodTargetFormat = createPDF(true);
         } else {
             jodTargetFormat = DefaultDocumentFormatRegistry.getFormatByExtension(targetFormat.getExtension());
         }
@@ -61,15 +64,24 @@ public class DocumentConverterService {
         }
     }
 
-    private org.jodconverter.core.document.DocumentFormat createPDF_A1b() {
+    private DocumentFormat createPDF(boolean isPDFA) {
         Map<String, Object> filterData = new HashMap<>();
 
-        filterData.put("SelectPdfVersion", 2);
         filterData.put("Quality", 90);
         filterData.put("ExportBookmarks", true);
         filterData.put("ExportNotes", false);
 
-        return org.jodconverter.core.document.DocumentFormat.builder()
+        if  (isPDFA) {
+            filterData.put("SelectPdfVersion", 2);
+            filterData.put("UseTaggedPDF", true);
+            filterData.put("ExportFormFields", true);
+        } else {
+            filterData.put("SelectPdfVersion", 0);
+            filterData.put("IsEmbedAllFonts", true);
+            filterData.put("IsSubsetEmbed", true);
+        }
+
+        return DocumentFormat.builder()
                 .from(DefaultDocumentFormatRegistry.PDF)
                 .storeProperty(DocumentFamily.TEXT, "FilterData", filterData)
                 .build();

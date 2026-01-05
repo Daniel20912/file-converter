@@ -1,6 +1,6 @@
 package com.danieloliveira.file_converter.document.controller;
 
-import com.danieloliveira.file_converter.document.model.DocumentFormat;
+import com.danieloliveira.file_converter.document.model.DocFormat;
 import com.danieloliveira.file_converter.document.service.DocumentConverterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -28,7 +28,22 @@ public class DocumentConverterController {
             throw new IllegalArgumentException("Document file is empty or corrupted");
         }
 
-        byte[] convertedDocument = service.documentConverter(document, DocumentFormat.PDF);
+        byte[] convertedDocument = service.documentConverter(document, DocFormat.PDF);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"document_converted.pdf\"")
+                .body(convertedDocument);
+    }
+
+    @PostMapping("/to-pdfa")
+    public ResponseEntity<byte[]> toPDFA(@RequestParam("file") MultipartFile document) throws IOException {
+
+        if (document.isEmpty()) {
+            throw new IllegalArgumentException("Document file is empty or corrupted");
+        }
+
+        byte[] convertedDocument = service.documentConverter(document, DocFormat.PDFA);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
@@ -43,7 +58,7 @@ public class DocumentConverterController {
             throw new IllegalArgumentException("Document file is empty or corrupted");
         }
 
-        byte[] convertedDocument = service.documentConverter(document, DocumentFormat.DOCX);
+        byte[] convertedDocument = service.documentConverter(document, DocFormat.DOCX);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.valueOf("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))

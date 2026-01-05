@@ -2,6 +2,8 @@ package com.danieloliveira.file_converter.document.service;
 
 import com.danieloliveira.file_converter.document.model.DocFormat;
 import lombok.RequiredArgsConstructor;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.jodconverter.core.DocumentConverter;
 import org.jodconverter.core.document.DefaultDocumentFormatRegistry;
 import org.jodconverter.core.document.DocumentFamily;
@@ -14,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +42,10 @@ public class DocumentConverterService {
             throw new IllegalArgumentException("Document format not supported: " + incomingMimeType);
         }
 
+        if (originalFile.getContentType().equals(DocFormat.PDF.getMimeType()) && targetFormat == DocFormat.TXT) {
+            return extractTextFromPDF(originalFile);
+        }
+
         DocumentFormat jodTargetFormat;
 
         if (targetFormat == DocFormat.PDF) {
@@ -61,6 +68,23 @@ public class DocumentConverterService {
 
         } catch (OfficeException e) {
             throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    private byte[] extractTextFromPDF(MultipartFile pdfFile) {
+        try (PDDocument document = PDDocument.load(pdfFile.getInputStream())) {
+
+            PDFTextStripper stripper = new PDFTextStripper();
+
+            stripper.setSortByPosition(true);
+            stripper.setStartPage(1);
+            stripper.setEndPage(document.getNumberOfPages());
+
+            String text = stripper.getText(document);
+
+            return text.getBytes(StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

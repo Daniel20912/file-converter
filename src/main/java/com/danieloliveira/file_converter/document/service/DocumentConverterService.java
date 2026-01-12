@@ -1,5 +1,8 @@
 package com.danieloliveira.file_converter.document.service;
 
+import com.danieloliveira.file_converter.document.exceptions.ConversionException;
+import com.danieloliveira.file_converter.document.exceptions.InvalidDocumentFormatException;
+import com.danieloliveira.file_converter.document.exceptions.TextExtractionException;
 import com.danieloliveira.file_converter.document.model.DocFormat;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -39,10 +42,12 @@ public class DocumentConverterService {
                 .anyMatch(supportedMediaType -> supportedMediaType.includes(incomingMediaType));
 
         if (!isSupported) {
-            throw new IllegalArgumentException("Document format not supported: " + incomingMimeType);
+            throw new InvalidDocumentFormatException("Document format not supported: " + incomingMimeType);
         }
 
-        if (originalFile.getContentType().equals(DocFormat.PDF.getMimeType()) && targetFormat == DocFormat.TXT) {
+        if ((originalFile.getContentType().equals(DocFormat.PDF.getMimeType()) ||
+                originalFile.getContentType().equals(DocFormat.PDFA.getMimeType()) &&
+                        targetFormat == DocFormat.TXT)) {
             return extractTextFromPDF(originalFile);
         }
 
@@ -67,7 +72,7 @@ public class DocumentConverterService {
             return baos.toByteArray();
 
         } catch (OfficeException e) {
-            throw new RuntimeException(e.getMessage(), e);
+            throw new ConversionException("Error while converting file: " + e.getMessage());
         }
     }
 
@@ -84,7 +89,7 @@ public class DocumentConverterService {
 
             return text.getBytes(StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new TextExtractionException("Error while trying to extract text from pdf file: " + e.getMessage());
         }
     }
 
@@ -95,7 +100,7 @@ public class DocumentConverterService {
         filterData.put("ExportBookmarks", true);
         filterData.put("ExportNotes", false);
 
-        if  (isPDFA) {
+        if (isPDFA) {
             filterData.put("SelectPdfVersion", 2);
             filterData.put("UseTaggedPDF", true);
             filterData.put("ExportFormFields", true);

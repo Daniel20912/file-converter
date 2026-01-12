@@ -1,5 +1,6 @@
 package com.danieloliveira.file_converter.document.controller;
 
+import com.danieloliveira.file_converter.document.exceptions.DocumentCorruptedOrEmptyException;
 import com.danieloliveira.file_converter.document.model.DocFormat;
 import com.danieloliveira.file_converter.document.service.DocumentConverterService;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ public class DocumentConverterController {
     public ResponseEntity<byte[]> toPDF(@RequestParam("file") MultipartFile document) throws IOException {
 
         if (document.isEmpty()) {
-            throw new IllegalArgumentException("Document file is empty or corrupted");
+            throw new DocumentCorruptedOrEmptyException("Document file is empty or corrupted");
         }
 
         byte[] convertedDocument = service.documentConverter(document, DocFormat.PDF);
@@ -40,7 +41,7 @@ public class DocumentConverterController {
     public ResponseEntity<byte[]> toPDFA(@RequestParam("file") MultipartFile document) throws IOException {
 
         if (document.isEmpty()) {
-            throw new IllegalArgumentException("Document file is empty or corrupted");
+            throw new DocumentCorruptedOrEmptyException("Document file is empty or corrupted");
         }
 
         byte[] convertedDocument = service.documentConverter(document, DocFormat.PDFA);
@@ -55,7 +56,7 @@ public class DocumentConverterController {
     public ResponseEntity<byte[]> toDOCX(@RequestParam("file") MultipartFile document) throws IOException {
 
         if (document.isEmpty()) {
-            throw new IllegalArgumentException("Document file is empty or corrupted");
+            throw new DocumentCorruptedOrEmptyException("Document file is empty or corrupted");
         }
 
         byte[] convertedDocument = service.documentConverter(document, DocFormat.DOCX);
@@ -70,13 +71,13 @@ public class DocumentConverterController {
     public ResponseEntity<byte[]> toTXT(@RequestParam("file") MultipartFile document) throws IOException {
 
         if (document.isEmpty()) {
-            throw new IllegalArgumentException("Document file is empty or corrupted");
+            throw new DocumentCorruptedOrEmptyException("Document file is empty or corrupted");
         }
 
         byte[] convertedDocument = service.documentConverter(document, DocFormat.TXT);
 
         return ResponseEntity.ok()
-                .contentType(MediaType.valueOf("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+                .contentType(MediaType.TEXT_PLAIN)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"document_converted.txt\"")
                 .body(convertedDocument);
     }

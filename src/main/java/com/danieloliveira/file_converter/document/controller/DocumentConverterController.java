@@ -59,6 +59,13 @@ public class DocumentConverterController {
             throw new DocumentCorruptedOrEmptyException("Document file is empty or corrupted");
         }
 
+        if (document.getContentType().equals(DocFormat.PDF)) {
+            return ResponseEntity
+                    .status(415)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .build();
+        }
+
         byte[] convertedDocument = service.documentConverter(document, DocFormat.DOCX);
 
         return ResponseEntity.ok()

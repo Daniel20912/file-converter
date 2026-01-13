@@ -72,4 +72,15 @@ public class GlobalExceptionHandler {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(new ErrorMessage(request, HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage()));
     }
+
+    // other erros
+    // TODO adicionar erro para o caso de conversão pdf para word
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorMessage> handleGenericException(Exception ex, HttpServletRequest request) {
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new ErrorMessage(request, HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage()));
+    }
 }

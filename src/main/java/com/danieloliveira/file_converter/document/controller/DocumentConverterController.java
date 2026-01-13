@@ -1,6 +1,7 @@
 package com.danieloliveira.file_converter.document.controller;
 
 import com.danieloliveira.file_converter.document.exceptions.DocumentCorruptedOrEmptyException;
+import com.danieloliveira.file_converter.document.exceptions.InvalidDocumentFormatException;
 import com.danieloliveira.file_converter.document.model.DocFormat;
 import com.danieloliveira.file_converter.document.service.DocumentConverterService;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1/conversions/documents")
@@ -59,11 +61,8 @@ public class DocumentConverterController {
             throw new DocumentCorruptedOrEmptyException("Document file is empty or corrupted");
         }
 
-        if (document.getContentType().equals(DocFormat.PDF)) {
-            return ResponseEntity
-                    .status(415)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .build();
+        if (Objects.equals(document.getContentType(), DocFormat.PDF.getMimeType())) {
+            throw new InvalidDocumentFormatException("The provided file cannot be converted to the requested format.");
         }
 
         byte[] convertedDocument = service.documentConverter(document, DocFormat.DOCX);

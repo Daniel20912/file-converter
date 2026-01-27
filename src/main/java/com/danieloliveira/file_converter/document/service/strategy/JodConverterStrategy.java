@@ -75,7 +75,7 @@ public class JodConverterStrategy implements DocumentConversionStrategy {
         return DocumentFormat.builder()
                 .from(DefaultDocumentFormatRegistry.PDF)
                 .storeProperty(DocumentFamily.TEXT, "FilterData", filterData)
-                .storeProperty(DocumentFamily.SPREADSHEET, "FilterData", filterData)
+                .storeProperty(DocumentFamily.DRAWING, "FilterData", filterData)
                 .build();
     }
 }

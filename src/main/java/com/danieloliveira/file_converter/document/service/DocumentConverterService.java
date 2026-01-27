@@ -2,117 +2,46 @@ package com.danieloliveira.file_converter.document.service;
 
 import com.danieloliveira.file_converter.document.exceptions.ConversionException;
 import com.danieloliveira.file_converter.document.exceptions.InvalidDocumentFormatException;
-import com.danieloliveira.file_converter.document.exceptions.TextExtractionException;
 import com.danieloliveira.file_converter.document.model.DocFormat;
+import com.danieloliveira.file_converter.document.service.strategy.DocumentConversionStrategy;
 import lombok.RequiredArgsConstructor;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
-import org.jodconverter.core.DocumentConverter;
-import org.jodconverter.core.document.DefaultDocumentFormatRegistry;
-import org.jodconverter.core.document.DocumentFamily;
-import org.jodconverter.core.document.DocumentFormat;
-import org.jodconverter.core.office.OfficeException;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class DocumentConverterService {
 
-    private final DocumentConverter converter;
+    private final List<DocumentConversionStrategy> strategies;
 
     public byte[] documentConverter(MultipartFile originalFile, DocFormat targetFormat) throws IOException {
-
         String incomingMimeType = originalFile.getContentType();
+        validateInputFormat(incomingMimeType);
 
-        assert incomingMimeType != null;
-        MediaType incomingMediaType = MediaType.parseMediaType(incomingMimeType);
+        DocumentConversionStrategy strategy = strategies.stream()
+                .filter(s -> s.canConvert(incomingMimeType, targetFormat))
+                .findFirst()
+                .orElseThrow(() -> new ConversionException("No conversion strategy found for this format pair."));
+
+        return strategy.convert(originalFile, targetFormat);
+    }
+
+    private void validateInputFormat(String mimeType) {
+        if (mimeType == null) throw new InvalidDocumentFormatException("MimeType is null");
+
+        MediaType mediaType = MediaType.parseMediaType(mimeType);
 
         boolean isSupported = Arrays.stream(DocFormat.values())
                 .map(fmt -> MediaType.parseMediaType(fmt.getMimeType()))
-                .anyMatch(supportedMediaType -> supportedMediaType.includes(incomingMediaType));
+                .anyMatch(supported -> supported.includes(mediaType));
 
         if (!isSupported) {
-            throw new InvalidDocumentFormatException("Document format not supported: " + incomingMimeType);
+            throw new InvalidDocumentFormatException("Format no supported: " + mimeType);
         }
-
-        if ((originalFile.getContentType().equals(DocFormat.PDF.getMimeType()) ||
-                originalFile.getContentType().equals(DocFormat.PDFA.getMimeType()) &&
-                        targetFormat == DocFormat.TXT)) {
-            return extractTextFromPDF(originalFile);
-        }
-
-        DocumentFormat jodTargetFormat;
-
-        if (targetFormat == DocFormat.PDF) {
-            jodTargetFormat = createPDF(false);
-        } else if (targetFormat == DocFormat.PDFA) {
-            jodTargetFormat = createPDF(true);
-        } else {
-            jodTargetFormat = DefaultDocumentFormatRegistry.getFormatByExtension(targetFormat.getExtension());
-        }
-
-        try (InputStream inputStream = originalFile.getInputStream(); ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-
-            assert jodTargetFormat != null;
-            converter.convert(inputStream)
-                    .to(baos)
-                    .as(jodTargetFormat)
-                    .execute();
-
-            return baos.toByteArray();
-
-        } catch (OfficeException e) {
-            throw new ConversionException("Error while converting file: " + e.getMessage());
-        }
-    }
-
-    private byte[] extractTextFromPDF(MultipartFile pdfFile) {
-        try (PDDocument document = PDDocument.load(pdfFile.getInputStream())) {
-
-            PDFTextStripper stripper = new PDFTextStripper();
-
-            stripper.setSortByPosition(true);
-            stripper.setStartPage(1);
-            stripper.setEndPage(document.getNumberOfPages());
-
-            String text = stripper.getText(document);
-
-            return text.getBytes(StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new TextExtractionException("Error while trying to extract text from pdf file: " + e.getMessage());
-        }
-    }
-
-    private DocumentFormat createPDF(boolean isPDFA) {
-        Map<String, Object> filterData = new HashMap<>();
-
-        filterData.put("Quality", 90);
-        filterData.put("ExportBookmarks", true);
-        filterData.put("ExportNotes", false);
-
-        if (isPDFA) {
-            filterData.put("SelectPdfVersion", 2);
-            filterData.put("UseTaggedPDF", true);
-            filterData.put("ExportFormFields", true);
-        } else {
-            filterData.put("SelectPdfVersion", 0);
-            filterData.put("IsEmbedAllFonts", true);
-            filterData.put("IsSubsetEmbed", true);
-        }
-
-        return DocumentFormat.builder()
-                .from(DefaultDocumentFormatRegistry.PDF)
-                .storeProperty(DocumentFamily.TEXT, "FilterData", filterData)
-                .build();
     }
 }

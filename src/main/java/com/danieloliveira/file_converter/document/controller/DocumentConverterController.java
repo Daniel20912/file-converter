@@ -4,6 +4,14 @@ import com.danieloliveira.file_converter.document.exceptions.DocumentCorruptedOr
 import com.danieloliveira.file_converter.document.exceptions.InvalidDocumentFormatException;
 import com.danieloliveira.file_converter.document.model.DocFormat;
 import com.danieloliveira.file_converter.document.service.DocumentConverterService;
+import com.danieloliveira.file_converter.exceptions.ErrorMessage;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -20,12 +28,26 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/api/v1/conversions/documents")
 @RequiredArgsConstructor
+@Tag(name = "Document Conversion", description = "Endpoints for converting office documents to different formats.")
 public class DocumentConverterController {
 
     private final DocumentConverterService service;
 
-    @PostMapping("/to-pdf")
-    public ResponseEntity<byte[]> toPDF(@RequestParam("file") MultipartFile document) throws IOException {
+    @Operation(summary = "Convert to Standard PDF", description = "Converts DOCX and TXT files to a standard PDF format with embedded fonts.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "File converted successfully",
+                    content = @Content(mediaType = "application/pdf")),
+            @ApiResponse(responseCode = "400", description = "Bad Request: File is empty or corrupted",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "415", description = "Unsupported Media Type: Input format not supported",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error: Conversion failed",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class)))
+    })
+    @PostMapping(value = "/to-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<byte[]> toPDF(
+            @Parameter(description = "The document file to convert", required = true)
+            @RequestParam("file") MultipartFile document) throws IOException {
 
         if (document.isEmpty()) {
             throw new DocumentCorruptedOrEmptyException("Document file is empty or corrupted");
@@ -39,8 +61,19 @@ public class DocumentConverterController {
                 .body(convertedDocument);
     }
 
-    @PostMapping("/to-pdfa")
-    public ResponseEntity<byte[]> toPDFA(@RequestParam("file") MultipartFile document) throws IOException {
+    @Operation(summary = "Convert to PDF/A (Archival)", description = "Converts documents to PDF/A-2b format, compliant with ISO 19005 standards for long-term archiving.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "PDF/A file created successfully",
+                    content = @Content(mediaType = "application/pdf")),
+            @ApiResponse(responseCode = "400", description = "Bad Request: File is empty or corrupted",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error: Conversion failed",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class)))
+    })
+    @PostMapping(value = "/to-pdfa", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<byte[]> toPDFA(
+            @Parameter(description = "The document file to convert", required = true)
+            @RequestParam("file") MultipartFile document) throws IOException {
 
         if (document.isEmpty()) {
             throw new DocumentCorruptedOrEmptyException("Document file is empty or corrupted");
@@ -54,8 +87,21 @@ public class DocumentConverterController {
                 .body(convertedDocument);
     }
 
-    @PostMapping("/to-docx")
-    public ResponseEntity<byte[]> toDOCX(@RequestParam("file") MultipartFile document) throws IOException {
+    @Operation(summary = "Convert to DOCX (Word)", description = "Converts text-based files (TXT) to Microsoft Word format.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "File converted successfully to DOCX",
+                    content = @Content(mediaType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document")),
+            @ApiResponse(responseCode = "400", description = "Bad Request: File is empty",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "415", description = "Unsupported Media Type: PDF input is not allowed for this endpoint",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error: Conversion failed",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class)))
+    })
+    @PostMapping(value = "/to-docx", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<byte[]> toDOCX(
+            @Parameter(description = "The document file to convert (PDF is not allowed)", required = true)
+            @RequestParam("file") MultipartFile document) throws IOException {
 
         if (document.isEmpty()) {
             throw new DocumentCorruptedOrEmptyException("Document file is empty or corrupted");
@@ -73,8 +119,19 @@ public class DocumentConverterController {
                 .body(convertedDocument);
     }
 
-    @PostMapping("/to-txt")
-    public ResponseEntity<byte[]> toTXT(@RequestParam("file") MultipartFile document) throws IOException {
+    @Operation(summary = "Extract Text (TXT)", description = "Extracts plain text from documents, including PDFs and DOCX.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Text extracted successfully",
+                    content = @Content(mediaType = "text/plain")),
+            @ApiResponse(responseCode = "400", description = "Bad Request: File is empty",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error: Text extraction failed",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorMessage.class)))
+    })
+    @PostMapping(value = "/to-txt", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<byte[]> toTXT(
+            @Parameter(description = "The document file to extract text from", required = true)
+            @RequestParam("file") MultipartFile document) throws IOException {
 
         if (document.isEmpty()) {
             throw new DocumentCorruptedOrEmptyException("Document file is empty or corrupted");

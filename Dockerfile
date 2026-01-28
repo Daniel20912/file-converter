@@ -32,6 +32,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
 COPY --from=build /app/target/*.jar app.jar
 
 ENV JODCONVERTER_LOCAL_OFFICE_HOME=/usr/lib/libreoffice
+ENV HOME=/tmp
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

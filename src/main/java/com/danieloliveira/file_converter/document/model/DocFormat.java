@@ -8,7 +8,11 @@ public enum DocFormat {
     DOC("application/msword", "doc"),
     PDF("application/pdf", "pdf"),
     PDFA("application/pdf", "pdf"),
-    TXT("text/plain", "txt");
+    TXT("text/plain", "txt"),
+    XLSX("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"),
+    XLS("application/vnd.ms-excel", "xls"),
+    PPTX("application/vnd.openxmlformats-officedocument.presentationml.presentation", "pptx"),
+    PPT("application/vnd.ms-powerpoint", "ppt");
 
     private final String mimeType;
     private final String extension;

@@ -25,7 +25,14 @@ public class JodConverterStrategy implements DocumentConversionStrategy {
 
     @Override
     public boolean canConvert(String sourceMimeType, DocFormat targetFormat) {
-        return true; // fallback
+
+        boolean isSourceExcel = sourceMimeType.contains("spreadsheet") || sourceMimeType.contains("excel");
+        boolean isSourcePPT = sourceMimeType.contains("presentation") || sourceMimeType.contains("powerpoint");
+
+        boolean isTargetTxt = targetFormat == DocFormat.TXT;
+
+
+        return (!isSourceExcel && !isSourcePPT) || !isTargetTxt;
     }
 
     @Override

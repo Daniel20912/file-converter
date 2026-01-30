@@ -31,7 +31,7 @@ public class DocumentConverterController {
 
     private final DocumentConverterService service;
 
-    @Operation(summary = "Convert to Standard PDF", description = "Converts DOCX and TXT files to a standard PDF format with embedded fonts.")
+    @Operation(summary = "Convert to Standard PDF", description = "Converts DOCX, TXT, XLSX, XLS, PPTX and PPT files to a standard PDF format with embedded fonts.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "File converted successfully",
                     content = @Content(mediaType = "application/pdf")),
@@ -117,7 +117,7 @@ public class DocumentConverterController {
                 .body(convertedDocument);
     }
 
-    @Operation(summary = "Extract Text (TXT)", description = "Extracts plain text from documents, including PDFs and DOCX.")
+    @Operation(summary = "Extract Text (TXT)", description = "Extracts plain text from documents, including PDFs, DOCX.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Text extracted successfully",
                     content = @Content(mediaType = "text/plain")),

@@ -31,6 +31,7 @@ public class DocumentConverterService {
         return strategy.convert(originalFile, targetFormat);
     }
 
+
     private void validateInputFormat(String mimeType) {
         if (mimeType == null) throw new InvalidDocumentFormatException("MimeType is null");
 

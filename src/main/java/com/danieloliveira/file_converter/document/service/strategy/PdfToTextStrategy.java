@@ -4,6 +4,7 @@ import com.danieloliveira.file_converter.document.exceptions.TextExtractionExcep
 import com.danieloliveira.file_converter.document.model.DocFormat;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -11,7 +12,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 @Component
-public class PdfBoxStrategy implements DocumentConversionStrategy {
+@Order(1)
+public class PdfToTextStrategy implements DocumentConversionStrategy {
 
     @Override
     public boolean canConvert(String sourceMimeType, DocFormat targetFormat) {
